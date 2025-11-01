@@ -10,6 +10,12 @@ class game_state:
             ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
         ]
+        self.move_functions = {'p': self.get_pawn_moves,
+                               'R': self.get_rook_moves,
+                               'N': self.get_knight_moves,
+                               'B': self.get_bishop_moves,
+                               'K': self.get_king_moves,
+                               'Q': self.get_queen_moves}
         self.white_to_move = True
         self.move_log = []
 
@@ -35,19 +41,47 @@ class game_state:
             for c in range(len(self.board[r])):
                 turn = self.board[r][c][0]
                 if (turn == 'w' and self.white_to_move) or (turn == 'b' and not self.white_to_move):
+                    # print("here")
                     piece = self.board[r][c][1]
-                    if piece == 'p':
-                        self.get_pawn_moves(r, c, moves)
-                    elif piece == 'R':
-                        self.get_rook_moves(r, c, moves)
+                    self.move_functions[piece](r, c, moves)
+                    print(*moves)
         return moves
 
     def get_pawn_moves(self, r, c, moves):
-        pass
+        if self.white_to_move:
+            if self.board[r - 1][c] == "--":
+                moves.append(move((r,c), (r - 1, c), self.board))
+                if r == 6 and self.board[r - 2][c] == "--":
+                    moves.append(move((r, c), (r - 2, c), self.board))
+            if c - 1 >= 0:
+                if self.board[r-1][c-1][0] == 'b':
+                    moves.append(move((r, c), (r - 1, c - 1), self.board))
+            if c + 1 <= 7:
+                if self.board[r-1][c+1][0] == 'b':
+                    moves.append(move((r, c), (r - 1, c + 1), self.board))
+        else:
+            if self.board[r+1][c] == "--":
+                moves.append(move((r, c), (r+1, c), self.board))
+                if r == 1 and self.board[r - 2][c] == "--":
+                    moves.append(move((r, c), (r + 2, c), self.board))
+            if c - 1 >= 0:
+                if self.board[r + 1][c - 1][0] == 'b':
+                    moves.append(move((r, c), (r + 1, c - 1), self.board))
+            if c + 1 <= 7:
+                if self.board[r + 1][c + 1][0] == 'b':
+                    moves.append(move((r, c), (r + 1, c + 1), self.board))
+
 
     def get_rook_moves(self, r, c, moves):
         pass
-
+    def get_knight_moves(self, r, c, moves):
+        pass
+    def get_bishop_moves(self, r, c, moves):
+        pass
+    def get_queen_moves(self, r, c, moves):
+        pass
+    def get_king_moves(self, r, c, moves):
+        pass
 
 class move:
     ranks_to_rows = {'1': 7, '2': 6, '3': 5, '4': 4, '5': 3, '6': 2, '7': 1, '8': 0}
@@ -64,6 +98,7 @@ class move:
         self.piece_moved = board[self.start_row][self.start_col]
         self.piece_captured = board[self.end_row][self.end_col]
         self.move_id = self.start_row * 1000 + self.start_col * 100 + self.end_row * 10 + self.end_col
+        print(self.move_id)
 
     def __eq__(self, other):
         if isinstance(other, move):
