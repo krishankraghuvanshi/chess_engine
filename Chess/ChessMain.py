@@ -56,7 +56,7 @@ def main():
                     gs.undo_move()
                     move_made = True
             if move_made:
-                valid_move = gs.get_valid_moves()
+                valid_moves = gs.get_valid_moves()
                 move_made = False
 
         draw_game_state(screen, gs)
