@@ -26,9 +26,30 @@ class game_state:
             self.board[move.end_row][move.end_col] = move.piece_captured
             self.white_to_move = not self.white_to_move
 
+    def get_valid_moves(self):
+        return self.get_all_possible_moves()
 
-class move():
+    def get_all_possible_moves(self):
+        moves = []
+        for r in range(len(self.board)):
+            for c in range(len(self.board[r])):
+                turn = self.board[r][c][0]
+                if (turn == 'w' and self.white_to_move) or (turn == 'b' and not self.white_to_move):
+                    piece = self.board[r][c][1]
+                    if piece == 'p':
+                        self.get_pawn_moves(r, c, moves)
+                    elif piece == 'R':
+                        self.get_rook_moves(r, c, moves)
+        return moves
 
+    def get_pawn_moves(self, r, c, moves):
+        pass
+
+    def get_rook_moves(self, r, c, moves):
+        pass
+
+
+class move:
     ranks_to_rows = {'1': 7, '2': 6, '3': 5, '4': 4, '5': 3, '6': 2, '7': 1, '8': 0}
     rows_to_ranks = {v: k for k, v in ranks_to_rows.items()}
 
@@ -42,11 +63,16 @@ class move():
         self.end_col = end_sq[1]
         self.piece_moved = board[self.start_row][self.start_col]
         self.piece_captured = board[self.end_row][self.end_col]
+        self.move_id = self.start_row * 1000 + self.start_col * 100 + self.end_row * 10 + self.end_col
+
+    def __eq__(self, other):
+        if isinstance(other, move):
+            return self.move_id == other.move_id
+        return False
+
 
     def get_chess_notation(self):
         return self.get_rank_file(self.start_row, self.start_col) + self.get_rank_file(self.end_row, self.end_col)
 
     def get_rank_file(self, row, col):
         return self.cols_to_file[col] + self.rows_to_ranks[row]
-
-
