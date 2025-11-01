@@ -17,6 +17,15 @@ class game_state:
         self.board[move.start_row][move.start_col] = "--"
         self.board[move.end_row][move.end_col] = move.piece_moved
         self.move_log.append(move)
+        self.white_to_move = not self.white_to_move
+
+    def undo_move(self):
+        if len(self.move_log) > 0:
+            move = self.move_log.pop()
+            self.board[move.start_row][move.start_col] = move.piece_moved
+            self.board[move.end_row][move.end_col] = move.piece_captured
+            self.white_to_move = not self.white_to_move
+
 
 class move():
 

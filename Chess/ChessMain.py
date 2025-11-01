@@ -47,6 +47,9 @@ def main():
                     gs.make_move(move)
                     sq_selected = ()
                     player_clicks = []
+            elif e.type == p.KEYDOWN:
+                if e.key == p.K_z:
+                    gs.undo_move()
 
         draw_game_state(screen, gs)
         clock.tick(MAX_FPS)
@@ -58,7 +61,7 @@ def draw_game_state(screen, gs):
     draw_pieces(screen, gs.board)
 
 def draw_board(screen):
-    colors = [p.Color("white"), p.Color("blue")]
+    colors = [p.Color("white"), p.Color("pink")]
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             color = colors[(r + c) % 2]
