@@ -36,7 +36,6 @@ class game_state:
         elif move.piece_moved == "bK":
             self.black_king_location = (move.end_row, move.end_col)
 
-
     def undo_move(self):
         if len(self.move_log) > 0:
             move = self.move_log.pop()
@@ -67,24 +66,23 @@ class game_state:
                 check_col = check[1]
                 piece_checking = self.board[check_row][check_col]
                 valid_squares = []
-                if piece_checking == 'N':
+                if piece_checking[1] == 'N':
                     valid_squares.append((check_row, check_col))
                 else:
                     for i in range(1, 8):
-                        valid_square = (king_row + check[2] * i + king_col + check[3] * i)
+                        valid_square = (king_row + check[2] * i, king_col + check[3] * i)
                         valid_squares.append(valid_square)
-                    for i in range(len(moves)-1, -1, -1):
-                        if moves[i].piece_moved[1] != 'K':
-                            if not (moves[i].end_row, moves[i].end_col) in valid_squares:
-                                moves.remove(moves[i])
+                        if valid_square == (check_row, check_col):
+                            break
+                for i in range(len(moves) - 1, -1, -1):
+                    if moves[i].piece_moved[1] != 'K':
+                        if not (moves[i].end_row, moves[i].end_col) in valid_squares:
+                            moves.remove(moves[i])
             else:
                 self.get_king_moves(king_row, king_col, moves)
         else:
             moves = self.get_all_possible_moves()
         return moves
-
-
-
 
         # moves = self.get_all_possible_moves()
         #
@@ -120,7 +118,6 @@ class game_state:
                 return True
         return False
 
-
     def get_all_possible_moves(self):
         moves = []
         for r in range(len(self.board)):
@@ -145,44 +142,44 @@ class game_state:
 
         if self.white_to_move:
             if self.board[r - 1][c] == "--":
-                if not piece_pinned and pin_direction == (-1, 0):
-                    moves.append(move((r,c), (r - 1, c), self.board))
+                if not piece_pinned or pin_direction == (-1, 0):
+                    moves.append(move((r, c), (r - 1, c), self.board))
                     if r == 6 and self.board[r - 2][c] == "--":
                         moves.append(move((r, c), (r - 2, c), self.board))
             if c - 1 >= 0:
-                if self.board[r-1][c-1][0] == 'b':
-                    if not piece_pinned and pin_direction == (-1, -1):
+                if self.board[r - 1][c - 1][0] == 'b':
+                    if not piece_pinned or pin_direction == (-1, -1):
                         moves.append(move((r, c), (r - 1, c - 1), self.board))
             if c + 1 <= 7:
-                if self.board[r-1][c+1][0] == 'b':
-                    if not piece_pinned and pin_direction == (-1, 1):
+                if self.board[r - 1][c + 1][0] == 'b':
+                    if not piece_pinned or pin_direction == (-1, 1):
                         moves.append(move((r, c), (r - 1, c + 1), self.board))
         else:
-            if self.board[r+1][c] == "--":
-                if not piece_pinned and pin_direction == (1, 0):
-                    moves.append(move((r, c), (r+1, c), self.board))
+            if self.board[r + 1][c] == "--":
+                if not piece_pinned or pin_direction == (1, 0):
+                    moves.append(move((r, c), (r + 1, c), self.board))
                     if r == 1 and self.board[r + 2][c] == "--":
                         moves.append(move((r, c), (r + 2, c), self.board))
             if c - 1 >= 0:
                 if self.board[r + 1][c - 1][0] == 'w':
-                    if not piece_pinned and pin_direction == (1, -1):
+                    if not piece_pinned or pin_direction == (1, -1):
                         moves.append(move((r, c), (r + 1, c - 1), self.board))
             if c + 1 <= 7:
                 if self.board[r + 1][c + 1][0] == 'w':
-                    if not piece_pinned and pin_direction == (1, 1):
+                    if not piece_pinned or pin_direction == (1, 1):
                         moves.append(move((r, c), (r + 1, c + 1), self.board))
-
 
     def get_rook_moves(self, r, c, moves):
         piece_pinned = False
         pin_direction = ()
-        for i in range(len(self.pins)-1, -1, -1):
+        for i in range(len(self.pins) - 1, -1, -1):
             if self.pins[i][0] == r and self.pins[i][1] == c:
                 piece_pinned = True
                 pin_direction = (self.pins[i][2], self.pins[i][3])
-                if self.board[r][c][1] != 'Q': # here cannot remove queen from pin on rook, only remove it on bishop moves
+                if self.board[r][c][
+                    1] != 'Q':  # here cannot remove queen from pin on rook, only remove it on bishop moves
                     self.pins.remove(self.pins[i])
-                    break
+                break
 
         directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
         enemy_color = 'b' if self.white_to_move else 'w'
@@ -191,30 +188,28 @@ class game_state:
                 end_row = r + d[0] * i
                 end_col = c + d[1] * i
                 if 0 <= end_row < 8 and 0 <= end_col < 8:
-                    if not piece_pinned and pin_direction == d or pin_direction == (-d[0], -d[1]):
-                        end_piece =  self.board[end_row][end_col]
-                        if end_piece== '--':
+                    if not piece_pinned or pin_direction == d or pin_direction == (-d[0], -d[1]):
+                        end_piece = self.board[end_row][end_col]
+                        if end_piece == '--':
                             moves.append(move((r, c), (end_row, end_col), self.board))
                         elif end_piece[0] == enemy_color:
                             moves.append(move((r, c), (end_row, end_col), self.board))
                             break
                         else:
                             break
-                    else:
-                        break
-
+                else:
+                    break
 
     def get_knight_moves(self, r, c, moves):
         piece_pinned = False
         # pin_direction = ()
-        for i in range(len(self.pins)-1, -1, -1):
+        for i in range(len(self.pins) - 1, -1, -1):
             if self.pins[i][0] == r and self.pins[i][1] == c:
                 piece_pinned = True
                 pin_direction = (self.pins[i][2], self.pins[i][3])
                 self.pins.remove(self.pins[i])
                 break
         directions = [(2, 1), (-2, 1), (2, -1), (-2, -1), (1, 2), (-1, 2), (1, -2), (-1, -2)]
-        # enemy_color = 'b' if self.white_to_move else 'w'
         ally_color = 'w' if self.white_to_move else 'b'
         for d in directions:
             end_row = r + d[0]
@@ -225,9 +220,8 @@ class game_state:
                     if end_piece[0] != ally_color:
                         moves.append(move((r, c), (end_row, end_col), self.board))
 
-
     def get_bishop_moves(self, r, c, moves):
-        piece_pinned =False
+        piece_pinned = False
         pin_direction = ()
         for i in range(len(self.pins) - 1, -1, -1):
             if self.pins[i][0] == r and self.pins[i][1] == c:
@@ -242,19 +236,21 @@ class game_state:
                 end_row = r + d[0] * i
                 end_col = c + d[1] * i
                 if 0 <= end_row < 8 and 0 <= end_col < 8:
-                    end_piece = self.board[end_row][end_col]
-                    if end_piece == "--":
-                        moves.append(move((r, c), (end_row, end_col), self.board))
-                    elif end_piece[0] == enemy_color:
-                        moves.append(move((r, c), (end_row, end_col), self.board))
-                        break
-                    else:
-                        break
+                    if not piece_pinned or pin_direction == d or pin_direction == (-d[0], -d[1]):
+                        end_piece = self.board[end_row][end_col]
+                        if end_piece == "--":
+                            moves.append(move((r, c), (end_row, end_col), self.board))
+                        elif end_piece[0] == enemy_color:
+                            moves.append(move((r, c), (end_row, end_col), self.board))
+                            break
+                        else:
+                            break
                 else:
                     break
+
     def get_queen_moves(self, r, c, moves):
         self.get_rook_moves(r, c, moves)
-        self.get_knight_moves(r, c, moves)
+        self.get_bishop_moves(r, c, moves)
         # directions = [(-1, 0), (0, 1), (1, 0), (0, -1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
         # enemy_color = 'b' if self.white_to_move else 'w'
         # for d in directions:
@@ -282,7 +278,7 @@ class game_state:
             end_col = c + col_moves[i]
             if 0 <= end_row < 8 and 0 <= end_col < 8:
                 end_piece = self.board[end_row][end_col]
-                if end_piece[0] == ally_color:
+                if end_piece[0] != ally_color:
                     if ally_color == 'w':
                         self.white_king_location = (end_row, end_col)
                     else:
@@ -303,6 +299,7 @@ class game_state:
         #         end_piece = self.board[end_row][end_col]
         #         if end_piece == "--" or end_piece[0] == enemy_color:
         #             moves.append(move((r, c), (end_row, end_col), self.board))
+
     def check_for_pins_and_checks(self):
         pins = []
         checks = []
@@ -327,19 +324,19 @@ class game_state:
 
                 if 0 <= end_row < 8 and 0 <= end_col < 8:
                     end_piece = self.board[end_row][end_col]
-                    if end_piece[0] == ally_color or end_piece[1] == 'K' :
+                    if end_piece[0] == ally_color and end_piece[1] != 'K':
                         if possible_pin == ():
                             possible_pin = (end_row, end_col, d[0], d[1])
                         else:
                             break
-                    elif end_piece == enemy_color:
+                    elif end_piece[0] == enemy_color:
                         type = end_piece[1]
                         if ((0 <= j <= 3 and type == 'R') or
                                 (4 <= j <= 7 and type == 'B') or
                                 (i == 1 and type == 'p' and ((enemy_color == 'w' and 6 <= j <= 7) or
-                                                             (enemy_color == 'b' and 4 <= j <= 5)) or
-                                 type == 'Q' or
-                                 (j == 1 and type == 'K'))):
+                                                             (enemy_color == 'b' and 4 <= j <= 5))) or
+                                type == 'Q' or
+                                (i == 1 and type == 'K')):
                             if possible_pin == ():
                                 in_check = True
                                 checks.append((end_row, end_col, d[0], d[1]))
@@ -349,13 +346,15 @@ class game_state:
                                 break
                         else:
                             break
+                else:
+                    break
         knight_moves = [(2, 1), (-2, 1), (2, -1), (-2, -1), (1, 2), (-1, 2), (1, -2), (-1, -2)]
         for m in knight_moves:
             end_row = start_row + m[0]
             end_col = start_col + m[1]
             if 0 <= end_row < 8 and 0 <= end_col < 8:
                 end_piece = self.board[end_row][end_col]
-                if end_piece[0] == ally_color and end_piece[1] == 'N':
+                if end_piece[0] == enemy_color and end_piece[1] == 'N':
                     in_check = True
                     checks.append((end_row, end_col, m[0], m[1]))
         return in_check, pins, checks
@@ -378,10 +377,6 @@ class move:
         self.move_id = self.start_row * 1000 + self.start_col * 100 + self.end_row * 10 + self.end_col
         print(self.move_id)
 
-    # def __eq__(self, other):
-    #     if isinstance(other, move):
-    #         return self.move_id == other.move_id
-    #     return False
     def __eq__(self, other):
         if isinstance(other, move):
             return (self.start_row == other.start_row and
@@ -389,7 +384,6 @@ class move:
                     self.end_row == other.end_row and
                     self.end_col == other.end_col)
         return False
-
 
     def get_chess_notation(self):
         return self.get_rank_file(self.start_row, self.start_col) + self.get_rank_file(self.end_row, self.end_col)
