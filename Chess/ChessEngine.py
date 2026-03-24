@@ -20,8 +20,8 @@ class game_state:
         self.move_log = []
         self.white_king_location = (7, 4)
         self.black_king_location = (0, 4)
-        # self.check_mate = False
-        # self.stale_mate = False
+        self.checkmate = False
+        self.stalemate = False
         self.in_check = False
         self.pins = []
         self.checks = []
@@ -82,6 +82,16 @@ class game_state:
                 self.get_king_moves(king_row, king_col, moves)
         else:
             moves = self.get_all_possible_moves()
+            
+        if len(moves) == 0:
+            if self.in_check:
+                self.checkmate = True
+            else:
+                self.stalemate = True
+        else:
+            self.checkmate = False
+            self.stalemate = False
+            
         return moves
 
         # moves = self.get_all_possible_moves()
