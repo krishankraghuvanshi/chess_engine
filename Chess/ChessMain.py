@@ -1,6 +1,6 @@
 import pygame as p
 
-from Chess import ChessEngine
+from Chess import ChessEngine, SmartMoveFinder
 
 WIDTH = HEIGHT = 512
 DIMENSION = 8
@@ -29,35 +29,51 @@ def main():
     running = True
     sq_selected = ()
     player_clicks = []
+    player_one = True # If a Human is playing white, then this will be True. If an AI is playing, then False.
+    player_two = False # Human playing black
+    
     while running:
+        human_turn = (gs.white_to_move and player_one) or (not gs.white_to_move and player_two)
+        
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
+            # mouse handler
             elif e.type == p.MOUSEBUTTONDOWN:
-                location = p.mouse.get_pos()
-                col = location[0] // SQ_SIZE
-                row = location[1] // SQ_SIZE
-                if sq_selected == (row, col):
-                    sq_selected = ()
-                    player_clicks = []
-                else:
-                    sq_selected = (row, col)
-                    player_clicks.append(sq_selected)
-                if len(player_clicks) == 2:
-                    move = ChessEngine.move(player_clicks[0], player_clicks[1], gs.board)
-                    print(move.get_chess_notation())
-                    if move in valid_moves:
-                        gs.make_move(move)
-                        move_made = True
-                    sq_selected = ()
-                    player_clicks = []
+                if not gs.checkmate and not gs.stalemate and human_turn:
+                    location = p.mouse.get_pos()
+                    col = location[0] // SQ_SIZE
+                    row = location[1] // SQ_SIZE
+                    if sq_selected == (row, col):
+                        sq_selected = ()
+                        player_clicks = []
+                    else:
+                        sq_selected = (row, col)
+                        player_clicks.append(sq_selected)
+                    if len(player_clicks) == 2:
+                        move = ChessEngine.move(player_clicks[0], player_clicks[1], gs.board)
+                        print(move.get_chess_notation())
+                        if move in valid_moves:
+                            gs.make_move(move)
+                            move_made = True
+                        sq_selected = ()
+                        player_clicks = []
             elif e.type == p.KEYDOWN:
                 if e.key == p.K_z:
                     gs.undo_move()
                     move_made = True
-            if move_made:
-                valid_moves = gs.get_valid_moves()
-                move_made = False
+        
+        # AI move finder
+        if not gs.checkmate and not gs.stalemate and not human_turn:
+            ai_move = SmartMoveFinder.find_best_move(gs, valid_moves)
+            if ai_move is None:
+                ai_move = SmartMoveFinder.find_random_move(valid_moves)
+            gs.make_move(ai_move)
+            move_made = True
+            
+        if move_made:
+            valid_moves = gs.get_valid_moves()
+            move_made = False
 
         draw_game_state(screen, gs)
         clock.tick(MAX_FPS)
